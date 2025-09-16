@@ -1,0 +1,257 @@
+Software Design Specification (SDS)
+
+Application Name: StockBuddy
+
+Author: Nick Smith
+Date: 9/16/2025
+Version: 1.0
+
+1. Introduction
+1.1 Purpose
+
+The purpose of this document is to define the design, architecture, and features of the StockPilot application. The application will provide stock market insights, recommendations, portfolio projections, and a customizable strategy engine for retail investors.
+
+1.2 Scope
+
+StockPilot will:
+
+Provide a clean and intuitive graphical user interface (GUI).
+
+Fetch real-time and historical stock data via free APIs.
+
+Offer predefined recommendation presets and allow users to create and save their own.
+
+Track major indexes (S&P 500, Dow Jones, Nasdaq, Russell 2000).
+
+Enable portfolio tracking and projection modeling with dividend reinvestment (DRIP) and margin simulation.
+
+1.3 Intended Audience
+
+Retail investors
+
+Beginner to intermediate traders
+
+Educational use cases (learning technical indicators)
+
+1.4 Assumptions & Dependencies
+
+Application will rely on free stock market APIs (e.g., Alpha Vantage, Yahoo Finance via yfinance, or Finnhub).
+
+Users have internet access for data fetching.
+
+Portfolio projection models assume historical averages and do not guarantee future returns.
+
+2. System Architecture
+2.1 High-Level Architecture
++---------------------+
+|   User Interface    |
+|  (Desktop/Web GUI)  |
++----------+----------+
+           |
+           v
++---------------------+
+|   Application Core  |
+| Recommendation      |
+| Engine, Portfolio   |
+| Projection, Presets |
++----------+----------+
+           |
+           v
++---------------------+
+|   Data Services     |
+| API Connectors      |
+| (Alpha Vantage,     |
+| Yahoo Finance, etc.)|
++----------+----------+
+           |
+           v
++---------------------+
+|   Storage Layer     |
+| SQLite / Postgres   |
+| Presets, Portfolio, |
+| User Preferences    |
++---------------------+
+
+3. Functional Requirements
+3.1 User Interface
+
+Top Bar: Live market index display (S&P 500, Dow, Nasdaq, Russell 2000).
+
+Dashboard:
+
+Overview of market & portfolio.
+
+Recommendation signals.
+
+Quick charts.
+
+Watchlist & Portfolio:
+
+Add/edit/remove stocks.
+
+Track shares, buy price, dividends, and margin usage.
+
+Preset Management:
+
+Load predefined presets.
+
+Create and save custom presets.
+
+Settings:
+
+API key management.
+
+Refresh interval control.
+
+3.2 Recommendation Engine
+
+Predefined Strategies:
+
+SMA-200 + RSI < 30 → Buy.
+
+Golden Cross (50 SMA > 200 SMA) → Buy.
+
+RSI > 70 → Sell.
+
+MACD crossover → Buy/Sell.
+
+Custom Strategies:
+
+User-defined indicator thresholds.
+
+Save multiple presets with unique names.
+
+Apply strategies to entire watchlist.
+
+3.3 Portfolio Projection Engine
+
+Projection Period: 1–5 years.
+
+Inputs:
+
+Expected growth rate (historical average).
+
+Dividends (DRIP toggle).
+
+Margin (toggle, interest rate input).
+
+Outputs:
+
+Projected portfolio balance (line chart).
+
+Sector allocation pie chart.
+
+Growth scenarios (optimistic, base, pessimistic).
+
+3.4 Data Integration
+
+API must support:
+
+Daily OHLCV data.
+
+Technical indicators (or calculated locally).
+
+Dividend history.
+
+Caching layer to reduce API calls.
+
+4. Non-Functional Requirements
+
+Performance: Handle 100–200 stocks in watchlist without lag.
+
+Scalability: Modular design for additional APIs or broker integrations.
+
+Reliability: Graceful fallback if API is unavailable.
+
+Security: API keys stored securely; local storage encrypted if possible.
+
+Usability: Clean design, intuitive navigation, color-coded signals.
+
+5. Technology Stack
+Option A – Desktop App
+
+Language: Python
+
+GUI Framework: PyQt5 / Tkinter
+
+Data: yfinance, Alpha Vantage API wrapper
+
+Database: SQLite
+
+Charts: Matplotlib / Plotly
+
+Option B – Web App
+
+Frontend: React (with Chart.js / Recharts for visualization)
+
+Backend: Flask (Python) or Node.js
+
+Database: PostgreSQL / SQLite
+
+Data Sources: Yahoo Finance API, Alpha Vantage, Finnhub
+
+6. User Experience Design
+6.1 Mockup Layout
+
+Top Bar:
+[S&P 500: 5,200 | Dow: 36,500 | Nasdaq: 15,400 | Russell: 2,100]
+
+Sidebar:
+
+Dashboard
+
+Watchlist
+
+Presets
+
+Settings
+
+Main Dashboard (example):
+
+Market Overview Card
+
+Watchlist Table (Symbol, Price, % Change, Signal)
+
+Recommendation Panel (Buy/Hold/Sell)
+
+Portfolio Projection Chart
+
+6.2 Color Coding
+
+Buy → Green
+
+Hold → Yellow
+
+Sell → Red
+
+7. Data Flow
+
+User opens app → GUI initializes.
+
+API fetch → Stock/index data retrieved and cached.
+
+Recommendation Engine runs using active preset.
+
+Recommendations + charts displayed in GUI.
+
+Portfolio projections calculated and updated.
+
+8. Risks & Mitigations
+
+API Rate Limits: Implement caching, staggered updates.
+
+Data Accuracy: Cross-check multiple APIs when possible.
+
+User Misinterpretation: Add disclaimer ("Not financial advice").
+
+Performance Issues: Optimize API requests, batch fetching.
+
+9. Future Enhancements
+
+AI/ML predictions.
+
+Sentiment analysis from news/social media.
+
+Brokerage API integration for live trading.
+
+Mobile companion app.
