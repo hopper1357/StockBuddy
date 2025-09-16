@@ -83,14 +83,12 @@ class PortfolioWidget(QWidget):
             QMessageBox.warning(self, "Input Error", "Shares and Buy Price must be numbers.")
             return
 
-        if self.db_manager.add_stock_to_portfolio(ticker, shares, buy_price):
-            self.portfolio = self.db_manager.get_portfolio()
-            self.ticker_input.clear()
-            self.shares_input.clear()
-            self.buy_price_input.clear()
-            self.update_portfolio()
-        else:
-            QMessageBox.information(self, "Stock Exists", f"'{ticker}' is already in the portfolio.")
+        self.db_manager.add_stock_to_portfolio(ticker, shares, buy_price)
+        self.portfolio = self.db_manager.get_portfolio()
+        self.ticker_input.clear()
+        self.shares_input.clear()
+        self.buy_price_input.clear()
+        self.update_portfolio()
 
     def remove_stock(self):
         selected_rows = self.portfolio_table.selectionModel().selectedRows()

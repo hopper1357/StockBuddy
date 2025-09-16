@@ -52,14 +52,25 @@ class DatabaseManager:
         self.cursor.execute("SELECT ticker, shares, buy_price FROM portfolio ORDER BY ticker")
         return [{"ticker": row[0], "shares": row[1], "buy_price": row[2]} for row in self.cursor.fetchall()]
 
+    def get_stock_from_portfolio(self, ticker):
+        self.cursor.execute("SELECT shares, buy_price FROM portfolio WHERE ticker = ?", (ticker,))
+        return self.cursor.fetchone()
+
     def add_stock_to_portfolio(self, ticker, shares, buy_price):
-        try:
+        existing_stock = self.get_stock_from_portfolio(ticker)
+        if existing_stock:
+            # Update existing stock
+            old_shares, old_buy_price = existing_stock
+            new_shares = old_shares + shares
+            new_buy_price = ((old_shares * old_buy_price) + (shares * buy_price)) / new_shares
+            self.cursor.execute("UPDATE portfolio SET shares = ?, buy_price = ? WHERE ticker = ?",
+                                (new_shares, new_buy_price, ticker))
+        else:
+            # Insert new stock
             self.cursor.execute("INSERT INTO portfolio (ticker, shares, buy_price) VALUES (?, ?, ?)",
                                 (ticker, shares, buy_price))
-            self.conn.commit()
-            return True
-        except sqlite3.IntegrityError:
-            return False
+        self.conn.commit()
+        return True
 
     def remove_stock_from_portfolio(self, ticker):
         self.cursor.execute("DELETE FROM portfolio WHERE ticker = ?", (ticker,))
