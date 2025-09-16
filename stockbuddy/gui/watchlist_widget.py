@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit,
+from datetime import datetime
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel,
                              QPushButton, QTableWidget, QTableWidgetItem, QAbstractItemView, QMessageBox)
 from PyQt5.QtCore import QTimer
 from stockbuddy.core.preset_manager import PresetManager
@@ -41,6 +42,12 @@ class WatchlistWidget(QWidget):
         self.watchlist_table.setSortingEnabled(True)
 
         layout.addWidget(self.watchlist_table)
+
+        # --- Refresh Message ---
+        self.refresh_label = QLabel("Updating...")
+        self.refresh_label.setStyleSheet("font-style: italic; color: grey;")
+        layout.addWidget(self.refresh_label)
+
         self.setLayout(layout)
 
         # --- Connect Signals ---
@@ -122,3 +129,7 @@ class WatchlistWidget(QWidget):
                 self.watchlist_table.setItem(i, 0, QTableWidgetItem(ticker))
                 for j in range(1, 6):
                     self.watchlist_table.setItem(i, j, QTableWidgetItem("N/A"))
+
+        # Update the timestamp
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        self.refresh_label.setText(f"Last updated at: {timestamp}. Auto-refreshes every 60 seconds.")

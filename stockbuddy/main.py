@@ -57,14 +57,14 @@ class MainWindow(QMainWindow):
     def setup_ui(self):
         # Add items to sidebar and widgets to stacked_widget
         # Pass managers to widgets that need them
-        views = {
+        self.views = {
             "Dashboard": DashboardWidget(),
             "Watchlist": WatchlistWidget(self.settings_manager, self.preset_manager),
             "Presets": PresetsWidget(self.settings_manager, self.preset_manager),
             "Settings": SettingsWidget(self.settings_manager)
         }
 
-        for name, widget in views.items():
+        for name, widget in self.views.items():
             item = QListWidgetItem(name)
             self.sidebar.addItem(item)
 
@@ -81,6 +81,9 @@ class MainWindow(QMainWindow):
             # Connect the signal from the settings widget
             if isinstance(widget, SettingsWidget):
                 widget.font_size_changed.connect(self.apply_font_size)
+
+        # Connect preset changes to watchlist updates
+        self.views["Presets"].active_preset_changed.connect(self.views["Watchlist"].update_watchlist)
 
     def apply_font_size(self, size_str):
         """Applies the selected font size globally."""

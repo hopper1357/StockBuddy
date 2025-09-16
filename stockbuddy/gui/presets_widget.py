@@ -2,6 +2,7 @@ import json
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem,
                              QTextEdit, QPushButton, QInputDialog, QMessageBox,
                              QDialog, QFormLayout, QLineEdit, QDialogButtonBox)
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QFont
 
 from stockbuddy.core.preset_manager import PresetManager
@@ -36,6 +37,8 @@ class PresetEditDialog(QDialog):
 
 
 class PresetsWidget(QWidget):
+    active_preset_changed = pyqtSignal()
+
     def __init__(self, settings_manager: SettingsManager, preset_manager: PresetManager):
         super().__init__()
         self.settings_manager = settings_manager
@@ -146,6 +149,7 @@ class PresetsWidget(QWidget):
         preset_name = selected_items[0].text()
         self.settings_manager.set_active_preset(preset_name)
         self.load_presets_into_list() # Reload to update the bolded item
+        self.active_preset_changed.emit()
 
     def show_help(self):
         help_title = "Preset Creation Help"
