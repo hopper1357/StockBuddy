@@ -10,3 +10,11 @@ def test_get_index_data():
     tickers = ["^GSPC", "^DJI", "^IXIC", "^RUT"]
     data = dm.get_index_data(tickers)
     assert not data.empty
+
+def test_get_watchlist_data():
+    dm = DataManager()
+    tickers = ["AAPL", "GOOGL"]
+    data = dm.get_watchlist_data(tickers)
+    assert not data.empty
+    assert "AAPL" in data['Close']
+    assert "GOOGL" in data['Close']
