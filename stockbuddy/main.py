@@ -6,6 +6,7 @@ from stockbuddy.data.data_manager import DataManager
 from stockbuddy.data.database_manager import DatabaseManager
 from stockbuddy.gui.dashboard_widget import DashboardWidget
 from stockbuddy.gui.watchlist_widget import WatchlistWidget
+from stockbuddy.gui.portfolio_widget import PortfolioWidget
 from stockbuddy.gui.presets_widget import PresetsWidget
 from stockbuddy.gui.settings_widget import SettingsWidget
 from stockbuddy.core.settings_manager import SettingsManager
@@ -60,8 +61,9 @@ class MainWindow(QMainWindow):
         # Add items to sidebar and widgets to stacked_widget
         # Pass managers to widgets that need them
         self.views = {
-            "Dashboard": DashboardWidget(),
+            "Dashboard": DashboardWidget(self.db_manager),
             "Watchlist": WatchlistWidget(self.settings_manager, self.preset_manager, self.db_manager),
+            "Portfolio": PortfolioWidget(self.db_manager),
             "Presets": PresetsWidget(self.settings_manager, self.preset_manager),
             "Settings": SettingsWidget(self.settings_manager)
         }
