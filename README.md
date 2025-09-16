@@ -44,7 +44,7 @@ StockBuddy is a desktop application designed for retail investors to get stock m
 To run the application, execute the following command from the root directory of the project:
 
 ```bash
-python stockbuddy/main.py
+python run.py
 ```
 
 This will launch the main application window.
