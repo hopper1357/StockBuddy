@@ -80,7 +80,7 @@ class DashboardWidget(QWidget):
                 total_cost_basis += cost_basis
 
                 self.holdings_table.setItem(i, 2, QTableWidgetItem(f"${current_value:,.2f}"))
-                self.holdings_table.setItem(i, 3, QTableWidgetItem(f"${gain_loss:+,_ .2f}"))
+                self.holdings_table.setItem(i, 3, QTableWidgetItem(f"${gain_loss:+,.2f}"))
 
             except Exception as e:
                 self.holdings_table.setItem(i, 2, QTableWidgetItem("N/A"))
@@ -88,7 +88,7 @@ class DashboardWidget(QWidget):
 
         total_gain_loss = total_value - total_cost_basis
         self.total_value_label.setText(f"Total Portfolio Value: ${total_value:,.2f}")
-        self.total_gain_loss_label.setText(f"Total Gain/Loss: ${total_gain_loss:+,_ .2f}")
+        self.total_gain_loss_label.setText(f"Total Gain/Loss: ${total_gain_loss:+,.2f}")
 
         timestamp = datetime.now().strftime("%H:%M:%S")
         self.refresh_label.setText(f"Last updated at: {timestamp}. Auto-refreshes every 60 seconds.")
