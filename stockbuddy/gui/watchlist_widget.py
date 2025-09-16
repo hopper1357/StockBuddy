@@ -1,14 +1,15 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit,
                              QPushButton, QTableWidget, QTableWidgetItem, QAbstractItemView, QMessageBox)
 from PyQt5.QtCore import QTimer
-from stockbuddy.core.watchlist import Watchlist
 from stockbuddy.data.data_manager import DataManager
+from stockbuddy.core.recommendation_engine import RecommendationEngine
 
 class WatchlistWidget(QWidget):
     def __init__(self):
         super().__init__()
-        self.watchlist = Watchlist()
+        self.tickers = [] # Manage tickers directly in the widget
         self.data_manager = DataManager()
+        self.recommendation_engine = RecommendationEngine()
 
         layout = QVBoxLayout(self)
 
@@ -26,9 +27,9 @@ class WatchlistWidget(QWidget):
 
         # --- Watchlist Table ---
         self.watchlist_table = QTableWidget()
-        self.watchlist_table.setColumnCount(5)
+        self.watchlist_table.setColumnCount(6)
         self.watchlist_table.setHorizontalHeaderLabels([
-            "Symbol", "Price", "Change", "% Change", "Volume"
+            "Symbol", "Price", "Change", "% Change", "Volume", "Signal"
         ])
         self.watchlist_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.watchlist_table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -52,15 +53,16 @@ class WatchlistWidget(QWidget):
         self.update_watchlist()
 
     def add_stock(self):
-        ticker = self.ticker_input.text().strip()
+        ticker = self.ticker_input.text().strip().upper()
         if not ticker:
             return
 
-        if self.watchlist.add_ticker(ticker):
+        if ticker not in self.tickers:
+            self.tickers.append(ticker)
             self.ticker_input.clear()
             self.update_watchlist()  # Refresh immediately
         else:
-            QMessageBox.information(self, "Stock Exists", f"'{ticker.upper()}' is already in the watchlist.")
+            QMessageBox.information(self, "Stock Exists", f"'{ticker}' is already in the watchlist.")
 
     def remove_stock(self):
         selected_rows = self.watchlist_table.selectionModel().selectedRows()
@@ -71,28 +73,28 @@ class WatchlistWidget(QWidget):
         ticker_item = self.watchlist_table.item(row_index, 0)
         if ticker_item:
             ticker = ticker_item.text()
-            if self.watchlist.remove_ticker(ticker):
+            if ticker in self.tickers:
+                self.tickers.remove(ticker)
                 self.update_watchlist()
 
     def update_watchlist(self):
-        tickers = self.watchlist.get_tickers()
-        if not tickers:
+        if not self.tickers:
             self.watchlist_table.setRowCount(0) # Clear table
             return
 
-        data = self.data_manager.get_watchlist_data(tickers)
-        if data is None or data.empty:
+        # Fetch latest price data for all tickers at once
+        price_data_df = self.data_manager.get_watchlist_data(self.tickers)
+        if price_data_df is None or price_data_df.empty:
             return # No data to display
 
-        self.watchlist_table.setRowCount(len(tickers))
+        self.watchlist_table.setRowCount(len(self.tickers))
 
-        # yfinance returns a multi-index header when fetching multiple tickers
-        # We need to access the correct columns
-        price_data = data['Close']
-        volume_data = data['Volume']
-        open_data = data['Open']
+        price_data = price_data_df['Close']
+        volume_data = price_data_df['Volume']
+        open_data = price_data_df['Open']
 
-        for i, ticker in enumerate(tickers):
+        for i, ticker in enumerate(self.tickers):
+            # --- Update Price Info ---
             if ticker in price_data and ticker in volume_data and ticker in open_data:
                 price = price_data[ticker].iloc[-1]
                 volume = volume_data[ticker].iloc[-1]
@@ -106,9 +108,15 @@ class WatchlistWidget(QWidget):
                 self.watchlist_table.setItem(i, 3, QTableWidgetItem(f"{percent_change:+.2f}%"))
                 self.watchlist_table.setItem(i, 4, QTableWidgetItem(f"{volume:,}"))
             else:
-                # Handle cases where data for a specific ticker might fail
                 self.watchlist_table.setItem(i, 0, QTableWidgetItem(ticker))
-                self.watchlist_table.setItem(i, 1, QTableWidgetItem("N/A"))
-                self.watchlist_table.setItem(i, 2, QTableWidgetItem("N/A"))
-                self.watchlist_table.setItem(i, 3, QTableWidgetItem("N/A"))
-                self.watchlist_table.setItem(i, 4, QTableWidgetItem("N/A"))
+                for j in range(1, 5):
+                    self.watchlist_table.setItem(i, j, QTableWidgetItem("N/A"))
+
+            # --- Generate and Update Signal ---
+            try:
+                historical_data = self.data_manager.get_historical_data(ticker)
+                signal = self.recommendation_engine.generate_signals(historical_data)
+                self.watchlist_table.setItem(i, 5, QTableWidgetItem(signal))
+            except Exception as e:
+                # If signal generation fails for any reason, display N/A
+                self.watchlist_table.setItem(i, 5, QTableWidgetItem("N/A"))
