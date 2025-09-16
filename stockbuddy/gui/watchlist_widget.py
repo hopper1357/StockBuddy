@@ -82,23 +82,22 @@ class WatchlistWidget(QWidget):
             self.watchlist_table.setRowCount(0) # Clear table
             return
 
-        # Fetch latest price data for all tickers at once
-        price_data_df = self.data_manager.get_watchlist_data(self.tickers)
-        if price_data_df is None or price_data_df.empty:
-            return # No data to display
-
         self.watchlist_table.setRowCount(len(self.tickers))
 
-        price_data = price_data_df['Close']
-        volume_data = price_data_df['Volume']
-        open_data = price_data_df['Open']
-
         for i, ticker in enumerate(self.tickers):
-            # --- Update Price Info ---
-            if ticker in price_data and ticker in volume_data and ticker in open_data:
-                price = price_data[ticker].iloc[-1]
-                volume = volume_data[ticker].iloc[-1]
-                open_price = open_data[ticker].iloc[-1]
+            try:
+                # Fetch historical data once
+                historical_data = self.data_manager.get_historical_data(ticker)
+                if historical_data.empty:
+                    raise ValueError("No data returned")
+
+                # --- Extract Price Info from Historical Data ---
+                latest_row = historical_data.iloc[-1]
+                price = latest_row['Close']
+                volume = latest_row['Volume']
+                # Use previous day's close for change calculation if available
+                open_price = historical_data.iloc[-2]['Close'] if len(historical_data) > 1 else price
+
                 change = price - open_price
                 percent_change = (change / open_price) * 100 if open_price != 0 else 0
 
@@ -107,16 +106,13 @@ class WatchlistWidget(QWidget):
                 self.watchlist_table.setItem(i, 2, QTableWidgetItem(f"{change:+.2f}"))
                 self.watchlist_table.setItem(i, 3, QTableWidgetItem(f"{percent_change:+.2f}%"))
                 self.watchlist_table.setItem(i, 4, QTableWidgetItem(f"{volume:,}"))
-            else:
-                self.watchlist_table.setItem(i, 0, QTableWidgetItem(ticker))
-                for j in range(1, 5):
-                    self.watchlist_table.setItem(i, j, QTableWidgetItem("N/A"))
 
-            # --- Generate and Update Signal ---
-            try:
-                historical_data = self.data_manager.get_historical_data(ticker)
+                # --- Generate and Update Signal ---
                 signal = self.recommendation_engine.generate_signals(historical_data)
                 self.watchlist_table.setItem(i, 5, QTableWidgetItem(signal))
+
             except Exception as e:
-                # If signal generation fails for any reason, display N/A
-                self.watchlist_table.setItem(i, 5, QTableWidgetItem("N/A"))
+                # Handle cases where data for a specific ticker might fail
+                self.watchlist_table.setItem(i, 0, QTableWidgetItem(ticker))
+                for j in range(1, 6):
+                    self.watchlist_table.setItem(i, j, QTableWidgetItem("N/A"))

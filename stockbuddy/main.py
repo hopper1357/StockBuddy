@@ -1,18 +1,22 @@
 import sys
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QLabel, QWidget,
-                             QHBoxLayout, QListWidget, QStackedWidget, QListWidgetItem)
+                             QHBoxLayout, QListWidget, QStackedWidget, QListWidgetItem, QScrollArea)
 from PyQt5.QtCore import QTimer, Qt
 from stockbuddy.data.data_manager import DataManager
 from stockbuddy.gui.dashboard_widget import DashboardWidget
 from stockbuddy.gui.watchlist_widget import WatchlistWidget
 from stockbuddy.gui.presets_widget import PresetsWidget
 from stockbuddy.gui.settings_widget import SettingsWidget
+from stockbuddy.core.settings_manager import SettingsManager
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("StockBuddy")
         self.setGeometry(100, 100, 1200, 800)
+
+        self.settings_manager = SettingsManager()
+        self.font_sizes = {"Small": "10pt", "Medium": "12pt", "Large": "15pt"}
 
         # Central Widget and Layout
         central_widget = QWidget()
@@ -44,6 +48,10 @@ class MainWindow(QMainWindow):
         self.timer.timeout.connect(self.update_index_data)
         self.timer.start(60000)
 
+        # Apply initial font size
+        initial_font_size = self.settings_manager.get_setting("font_size")
+        self.apply_font_size(initial_font_size)
+
     def setup_ui(self):
         # Add items to sidebar and widgets to stacked_widget
         views = {
@@ -56,7 +64,27 @@ class MainWindow(QMainWindow):
         for name, widget in views.items():
             item = QListWidgetItem(name)
             self.sidebar.addItem(item)
-            self.stacked_widget.addWidget(widget)
+
+            # Wrap each widget in a scroll area
+            scroll_area = QScrollArea()
+            scroll_area.setWidgetResizable(True)
+            scroll_area.setWidget(widget)
+            # Set scrollbar policies
+            scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+            scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+
+            self.stacked_widget.addWidget(scroll_area)
+
+            # Connect the signal from the settings widget
+            if isinstance(widget, SettingsWidget):
+                widget.font_size_changed.connect(self.apply_font_size)
+
+    def apply_font_size(self, size_str):
+        """Applies the selected font size globally."""
+        font_size = self.font_sizes.get(size_str, "12pt") # Default to Medium
+        # Use the universal selector '*' to apply the font size to all widgets
+        stylesheet = f"* {{ font-size: {font_size}; }}"
+        QApplication.instance().setStyleSheet(stylesheet)
 
     def update_index_data(self):
         tickers = {
