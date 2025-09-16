@@ -1,12 +1,17 @@
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit,
+from datetime import datetime
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel,
                              QPushButton, QTableWidget, QTableWidgetItem, QAbstractItemView, QMessageBox)
 from PyQt5.QtCore import QTimer
+from stockbuddy.core.preset_manager import PresetManager
+from stockbuddy.core.settings_manager import SettingsManager
 from stockbuddy.data.data_manager import DataManager
 from stockbuddy.core.recommendation_engine import RecommendationEngine
 
 class WatchlistWidget(QWidget):
-    def __init__(self):
+    def __init__(self, settings_manager: SettingsManager, preset_manager: PresetManager):
         super().__init__()
+        self.settings_manager = settings_manager
+        self.preset_manager = preset_manager
         self.tickers = [] # Manage tickers directly in the widget
         self.data_manager = DataManager()
         self.recommendation_engine = RecommendationEngine()
@@ -37,6 +42,12 @@ class WatchlistWidget(QWidget):
         self.watchlist_table.setSortingEnabled(True)
 
         layout.addWidget(self.watchlist_table)
+
+        # --- Refresh Message ---
+        self.refresh_label = QLabel("Updating...")
+        self.refresh_label.setStyleSheet("font-style: italic; color: grey;")
+        layout.addWidget(self.refresh_label)
+
         self.setLayout(layout)
 
         # --- Connect Signals ---
@@ -79,23 +90,26 @@ class WatchlistWidget(QWidget):
 
     def update_watchlist(self):
         if not self.tickers:
-            self.watchlist_table.setRowCount(0) # Clear table
+            self.watchlist_table.setRowCount(0)
             return
 
         self.watchlist_table.setRowCount(len(self.tickers))
 
+        # Get the active preset rules
+        active_preset_name = self.settings_manager.get_active_preset()
+        active_preset = self.preset_manager.get_preset(active_preset_name)
+        rules = active_preset.get("rules", []) if active_preset else []
+
+
         for i, ticker in enumerate(self.tickers):
             try:
-                # Fetch historical data once
                 historical_data = self.data_manager.get_historical_data(ticker)
                 if historical_data.empty:
                     raise ValueError("No data returned")
 
-                # --- Extract Price Info from Historical Data ---
                 latest_row = historical_data.iloc[-1]
                 price = latest_row['Close']
                 volume = latest_row['Volume']
-                # Use previous day's close for change calculation if available
                 open_price = historical_data.iloc[-2]['Close'] if len(historical_data) > 1 else price
 
                 change = price - open_price
@@ -107,12 +121,15 @@ class WatchlistWidget(QWidget):
                 self.watchlist_table.setItem(i, 3, QTableWidgetItem(f"{percent_change:+.2f}%"))
                 self.watchlist_table.setItem(i, 4, QTableWidgetItem(f"{volume:,}"))
 
-                # --- Generate and Update Signal ---
-                signal = self.recommendation_engine.generate_signals(historical_data)
+                # Generate signal using the active preset's rules
+                signal = self.recommendation_engine.generate_signals(historical_data, rules)
                 self.watchlist_table.setItem(i, 5, QTableWidgetItem(signal))
 
             except Exception as e:
-                # Handle cases where data for a specific ticker might fail
                 self.watchlist_table.setItem(i, 0, QTableWidgetItem(ticker))
                 for j in range(1, 6):
                     self.watchlist_table.setItem(i, j, QTableWidgetItem("N/A"))
+
+        # Update the timestamp
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        self.refresh_label.setText(f"Last updated at: {timestamp}. Auto-refreshes every 60 seconds.")
