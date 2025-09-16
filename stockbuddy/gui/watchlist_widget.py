@@ -5,14 +5,16 @@ from PyQt5.QtCore import QTimer
 from stockbuddy.core.preset_manager import PresetManager
 from stockbuddy.core.settings_manager import SettingsManager
 from stockbuddy.data.data_manager import DataManager
+from stockbuddy.data.database_manager import DatabaseManager
 from stockbuddy.core.recommendation_engine import RecommendationEngine
 
 class WatchlistWidget(QWidget):
-    def __init__(self, settings_manager: SettingsManager, preset_manager: PresetManager):
+    def __init__(self, settings_manager: SettingsManager, preset_manager: PresetManager, db_manager: DatabaseManager):
         super().__init__()
         self.settings_manager = settings_manager
         self.preset_manager = preset_manager
-        self.tickers = [] # Manage tickers directly in the widget
+        self.db_manager = db_manager
+        self.tickers = self.db_manager.get_watchlist() # Load tickers from the database
         self.data_manager = DataManager()
         self.recommendation_engine = RecommendationEngine()
 
@@ -68,10 +70,10 @@ class WatchlistWidget(QWidget):
         if not ticker:
             return
 
-        if ticker not in self.tickers:
-            self.tickers.append(ticker)
+        if self.db_manager.add_stock_to_watchlist(ticker):
+            self.tickers = self.db_manager.get_watchlist() # Reload from DB
             self.ticker_input.clear()
-            self.update_watchlist()  # Refresh immediately
+            self.update_watchlist()
         else:
             QMessageBox.information(self, "Stock Exists", f"'{ticker}' is already in the watchlist.")
 
@@ -84,8 +86,8 @@ class WatchlistWidget(QWidget):
         ticker_item = self.watchlist_table.item(row_index, 0)
         if ticker_item:
             ticker = ticker_item.text()
-            if ticker in self.tickers:
-                self.tickers.remove(ticker)
+            if self.db_manager.remove_stock_from_watchlist(ticker):
+                self.tickers = self.db_manager.get_watchlist() # Reload from DB
                 self.update_watchlist()
 
     def update_watchlist(self):

@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QLabel, QWidget,
                              QHBoxLayout, QListWidget, QStackedWidget, QListWidgetItem, QScrollArea)
 from PyQt5.QtCore import QTimer, Qt
 from stockbuddy.data.data_manager import DataManager
+from stockbuddy.data.database_manager import DatabaseManager
 from stockbuddy.gui.dashboard_widget import DashboardWidget
 from stockbuddy.gui.watchlist_widget import WatchlistWidget
 from stockbuddy.gui.presets_widget import PresetsWidget
@@ -18,6 +19,7 @@ class MainWindow(QMainWindow):
 
         self.settings_manager = SettingsManager()
         self.preset_manager = PresetManager()
+        self.db_manager = DatabaseManager()
         self.font_sizes = {"Small": "10pt", "Medium": "12pt", "Large": "15pt"}
 
         # Central Widget and Layout
@@ -59,7 +61,7 @@ class MainWindow(QMainWindow):
         # Pass managers to widgets that need them
         self.views = {
             "Dashboard": DashboardWidget(),
-            "Watchlist": WatchlistWidget(self.settings_manager, self.preset_manager),
+            "Watchlist": WatchlistWidget(self.settings_manager, self.preset_manager, self.db_manager),
             "Presets": PresetsWidget(self.settings_manager, self.preset_manager),
             "Settings": SettingsWidget(self.settings_manager)
         }
