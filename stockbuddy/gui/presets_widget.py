@@ -53,9 +53,13 @@ class PresetsWidget(QWidget):
         add_button.clicked.connect(self.add_preset)
         delete_button = QPushButton("Delete")
         delete_button.clicked.connect(self.delete_preset)
+        help_button = QPushButton("Help")
+        help_button.clicked.connect(self.show_help)
+
 
         button_layout.addWidget(add_button)
         button_layout.addWidget(delete_button)
+        button_layout.addWidget(help_button)
         left_layout.addLayout(button_layout)
 
         # Right side: Preset details
@@ -115,3 +119,34 @@ class PresetsWidget(QWidget):
             self.preset_manager.delete_preset(preset_name)
             self.load_presets_into_list()
             self.preset_details_display.clear()
+
+    def show_help(self):
+        help_title = "Preset Creation Help"
+        help_text = """
+        <p><b>How to Create Your Own Preset:</b></p>
+        <ol>
+            <li>Click the "Add" button.</li>
+            <li>In the dialog, provide a unique name for your preset.</li>
+            <li>Edit the JSON rules in the text box. Each preset is a collection of rules.</li>
+        </ol>
+        <p><b>Understanding the Rule Terms:</b></p>
+        <ul>
+            <li><b>indicator:</b> The technical indicator to use (e.g., "SMA", "RSI", "MACD").</li>
+            <li><b>period:</b> The time period for the indicator (e.g., 14 for a 14-day RSI). Some indicators like "Golden Cross" have `short_period` and `long_period`.</li>
+            <li><b>condition:</b> The comparison operator (e.g., ">" for greater than, "<" for less than, "crosses_above").</li>
+            <li><b>value:</b> The threshold to check against. This can be a number (e.g., 70 for RSI) or a string like "Price".</li>
+            <li><b>action:</b> The signal to generate if the condition is met (e.g., "Buy" or "Sell").</li>
+        </ul>
+        <p><b>Example Rule:</b></p>
+        <pre>
+{
+    "indicator": "RSI",
+    "period": 14,
+    "condition": ">",
+    "value": 70,
+    "action": "Sell"
+}
+        </pre>
+        <p>This rule means: "If the 14-day RSI is greater than 70, generate a 'Sell' signal."</p>
+        """
+        QMessageBox.information(self, help_title, help_text)

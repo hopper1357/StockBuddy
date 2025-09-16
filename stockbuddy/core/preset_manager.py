@@ -60,5 +60,20 @@ class PresetManager:
                 "rules": [
                     {"indicator": "RSI", "period": 14, "condition": ">", "value": 70, "action": "Sell"}
                 ]
+            },
+            "Bollinger Bands Buy": {
+                "rules": [
+                    {"indicator": "Bollinger Bands", "period": 20, "std_dev": 2, "condition": "price_crosses_below_lower_band", "action": "Buy"}
+                ]
+            },
+            "Stochastic Oscillator Buy": {
+                "rules": [
+                    {"indicator": "Stochastic Oscillator", "k_period": 14, "d_period": 3, "condition": "<", "value": 20, "action": "Buy"}
+                ]
+            },
+            "Death Cross Sell": {
+                "rules": [
+                    {"indicator": "Death Cross", "short_period": 50, "long_period": 200, "condition": "crosses_below", "value": "Price", "action": "Sell"}
+                ]
             }
         }
