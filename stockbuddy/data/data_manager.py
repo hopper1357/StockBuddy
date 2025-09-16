@@ -6,5 +6,5 @@ class DataManager:
         return stock.history(period="1d")
 
     def get_index_data(self, tickers):
-        data = yf.download(tickers, period="1d")
+        data = yf.download(tickers, period="1d", auto_adjust=True)
         return data
