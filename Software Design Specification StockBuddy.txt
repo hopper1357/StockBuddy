@@ -9,11 +9,11 @@ Version: 1.0
 1. Introduction
 1.1 Purpose
 
-The purpose of this document is to define the design, architecture, and features of the StockPilot application. The application will provide stock market insights, recommendations, portfolio projections, and a customizable strategy engine for retail investors.
+The purpose of this document is to define the design, architecture, and features of the StockBuddy application. The application will provide stock market insights, recommendations, portfolio projections, and a customizable strategy engine for retail investors.
 
 1.2 Scope
 
-StockPilot will:
+StockBuddy will:
 
 Provide a clean and intuitive graphical user interface (GUI).
 
