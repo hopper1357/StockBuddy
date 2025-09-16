@@ -18,8 +18,11 @@ class DashboardWidget(QWidget):
         self.total_value_label.setStyleSheet("font-size: 16pt; font-weight: bold;")
         self.total_gain_loss_label = QLabel("Total Gain/Loss: N/A")
         self.total_gain_loss_label.setStyleSheet("font-size: 14pt;")
+        self.total_dividend_label = QLabel("Total Annual Dividend Income: N/A")
+        self.total_dividend_label.setStyleSheet("font-size: 14pt;")
         layout.addWidget(self.total_value_label)
         layout.addWidget(self.total_gain_loss_label)
+        layout.addWidget(self.total_dividend_label)
 
         # --- Holdings Table ---
         self.holdings_table = QTableWidget()
@@ -52,11 +55,13 @@ class DashboardWidget(QWidget):
             self.holdings_table.setRowCount(0)
             self.total_value_label.setText("Total Portfolio Value: $0.00")
             self.total_gain_loss_label.setText("Total Gain/Loss: $0.00")
+            self.total_dividend_label.setText("Total Annual Dividend Income: $0.00")
             return
 
         self.holdings_table.setRowCount(len(portfolio))
         total_value = 0
         total_cost_basis = 0
+        total_annual_dividend = 0
 
         for i, stock in enumerate(portfolio):
             ticker = stock["ticker"]
@@ -75,9 +80,11 @@ class DashboardWidget(QWidget):
                 current_value = shares * current_price
                 cost_basis = shares * buy_price
                 gain_loss = current_value - cost_basis
+                annual_dividend = self.data_manager.get_annual_dividend(ticker) * shares
 
                 total_value += current_value
                 total_cost_basis += cost_basis
+                total_annual_dividend += annual_dividend
 
                 self.holdings_table.setItem(i, 2, QTableWidgetItem(f"${current_value:,.2f}"))
                 self.holdings_table.setItem(i, 3, QTableWidgetItem(f"${gain_loss:+,.2f}"))
@@ -89,6 +96,7 @@ class DashboardWidget(QWidget):
         total_gain_loss = total_value - total_cost_basis
         self.total_value_label.setText(f"Total Portfolio Value: ${total_value:,.2f}")
         self.total_gain_loss_label.setText(f"Total Gain/Loss: ${total_gain_loss:+,.2f}")
+        self.total_dividend_label.setText(f"Total Annual Dividend Income: ${total_annual_dividend:,.2f}")
 
         timestamp = datetime.now().strftime("%H:%M:%S")
         self.refresh_label.setText(f"Last updated at: {timestamp}. Auto-refreshes every 60 seconds.")

@@ -37,9 +37,9 @@ class PortfolioWidget(QWidget):
 
         # --- Portfolio Table ---
         self.portfolio_table = QTableWidget()
-        self.portfolio_table.setColumnCount(7)
+        self.portfolio_table.setColumnCount(8)
         self.portfolio_table.setHorizontalHeaderLabels([
-            "Symbol", "Shares", "Buy Price", "Current Price", "Cost Basis", "Current Value", "Gain/Loss"
+            "Symbol", "Shares", "Buy Price", "Current Price", "Cost Basis", "Current Value", "Gain/Loss", "Annual Dividend"
         ])
         self.portfolio_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.portfolio_table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -128,14 +128,16 @@ class PortfolioWidget(QWidget):
                 cost_basis = shares * buy_price
                 current_value = shares * current_price
                 gain_loss = current_value - cost_basis
+                annual_dividend = self.data_manager.get_annual_dividend(ticker) * shares
 
                 self.portfolio_table.setItem(i, 3, QTableWidgetItem(f"{current_price:.2f}"))
                 self.portfolio_table.setItem(i, 4, QTableWidgetItem(f"{cost_basis:.2f}"))
                 self.portfolio_table.setItem(i, 5, QTableWidgetItem(f"{current_value:.2f}"))
                 self.portfolio_table.setItem(i, 6, QTableWidgetItem(f"{gain_loss:+.2f}"))
+                self.portfolio_table.setItem(i, 7, QTableWidgetItem(f"${annual_dividend:.2f}"))
 
             except Exception as e:
-                for j in range(3, 7):
+                for j in range(3, 8):
                     self.portfolio_table.setItem(i, j, QTableWidgetItem("N/A"))
 
         timestamp = datetime.now().strftime("%H:%M:%S")
