@@ -8,6 +8,7 @@ from stockbuddy.gui.watchlist_widget import WatchlistWidget
 from stockbuddy.gui.presets_widget import PresetsWidget
 from stockbuddy.gui.settings_widget import SettingsWidget
 from stockbuddy.core.settings_manager import SettingsManager
+from stockbuddy.core.preset_manager import PresetManager
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -16,6 +17,7 @@ class MainWindow(QMainWindow):
         self.setGeometry(100, 100, 1200, 800)
 
         self.settings_manager = SettingsManager()
+        self.preset_manager = PresetManager()
         self.font_sizes = {"Small": "10pt", "Medium": "12pt", "Large": "15pt"}
 
         # Central Widget and Layout
@@ -54,11 +56,12 @@ class MainWindow(QMainWindow):
 
     def setup_ui(self):
         # Add items to sidebar and widgets to stacked_widget
+        # Pass managers to widgets that need them
         views = {
             "Dashboard": DashboardWidget(),
-            "Watchlist": WatchlistWidget(),
-            "Presets": PresetsWidget(),
-            "Settings": SettingsWidget()
+            "Watchlist": WatchlistWidget(self.settings_manager, self.preset_manager),
+            "Presets": PresetsWidget(self.settings_manager, self.preset_manager),
+            "Settings": SettingsWidget(self.settings_manager)
         }
 
         for name, widget in views.items():

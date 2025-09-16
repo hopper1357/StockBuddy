@@ -2,8 +2,10 @@ import json
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QListWidget,
                              QTextEdit, QPushButton, QInputDialog, QMessageBox,
                              QDialog, QFormLayout, QLineEdit, QDialogButtonBox)
+from PyQt5.QtGui import QFont
 
 from stockbuddy.core.preset_manager import PresetManager
+from stockbuddy.core.settings_manager import SettingsManager
 
 
 class PresetEditDialog(QDialog):
@@ -34,9 +36,10 @@ class PresetEditDialog(QDialog):
 
 
 class PresetsWidget(QWidget):
-    def __init__(self):
+    def __init__(self, settings_manager: SettingsManager, preset_manager: PresetManager):
         super().__init__()
-        self.preset_manager = PresetManager()
+        self.settings_manager = settings_manager
+        self.preset_manager = preset_manager
 
         # Main layout
         layout = QHBoxLayout(self)
@@ -53,14 +56,21 @@ class PresetsWidget(QWidget):
         add_button.clicked.connect(self.add_preset)
         delete_button = QPushButton("Delete")
         delete_button.clicked.connect(self.delete_preset)
+
+        button_layout.addStretch()
+
         help_button = QPushButton("Help")
         help_button.clicked.connect(self.show_help)
+
+        self.set_active_button = QPushButton("Set as Active")
+        self.set_active_button.clicked.connect(self.set_active_preset)
 
 
         button_layout.addWidget(add_button)
         button_layout.addWidget(delete_button)
         button_layout.addWidget(help_button)
         left_layout.addLayout(button_layout)
+        left_layout.addWidget(self.set_active_button)
 
         # Right side: Preset details
         right_layout = QVBoxLayout()
@@ -78,8 +88,15 @@ class PresetsWidget(QWidget):
     def load_presets_into_list(self):
         self.preset_list_widget.clear()
         presets = self.preset_manager.get_all_presets()
+        active_preset_name = self.settings_manager.get_active_preset()
+
         for name in presets.keys():
-            self.preset_list_widget.addItem(name)
+            item = QListWidgetItem(name)
+            if name == active_preset_name:
+                font = QFont()
+                font.setBold(True)
+                item.setFont(font)
+            self.preset_list_widget.addItem(item)
 
     def display_preset_details(self):
         selected_items = self.preset_list_widget.selectedItems()
@@ -119,6 +136,16 @@ class PresetsWidget(QWidget):
             self.preset_manager.delete_preset(preset_name)
             self.load_presets_into_list()
             self.preset_details_display.clear()
+
+    def set_active_preset(self):
+        selected_items = self.preset_list_widget.selectedItems()
+        if not selected_items:
+            QMessageBox.warning(self, "Selection Error", "Please select a preset to set as active.")
+            return
+
+        preset_name = selected_items[0].text()
+        self.settings_manager.set_active_preset(preset_name)
+        self.load_presets_into_list() # Reload to update the bolded item
 
     def show_help(self):
         help_title = "Preset Creation Help"

@@ -6,9 +6,9 @@ class SettingsWidget(QWidget):
     # Signal to notify the main window that the font size has changed
     font_size_changed = pyqtSignal(str)
 
-    def __init__(self):
+    def __init__(self, settings_manager: SettingsManager):
         super().__init__()
-        self.settings_manager = SettingsManager()
+        self.settings_manager = settings_manager
 
         layout = QVBoxLayout()
         layout.setSpacing(15)

@@ -41,5 +41,14 @@ class SettingsManager:
     def get_default_settings(self):
         """Returns a dictionary of default settings."""
         return {
-            "font_size": "Medium"  # Options: "Small", "Medium", "Large"
+            "font_size": "Medium",  # Options: "Small", "Medium", "Large"
+            "active_preset": "Conservative Growth"
         }
+
+    def get_active_preset(self):
+        """Returns the name of the active preset."""
+        return self.get_setting("active_preset")
+
+    def set_active_preset(self, preset_name):
+        """Sets the active preset."""
+        self.set_setting("active_preset", preset_name)
